@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import asyncio
 import json
 from aiohttp import web
