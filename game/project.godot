@@ -12,8 +12,18 @@ config_version=5
 
 config/name="Lubiversus"
 run/main_scene="res://test_network.tscn"
-config/features=PackedStringArray("4.2")
+config/features=PackedStringArray("4.3")
 run/max_fps=60
+
+[autoload]
+
+Noray="*res://addons/netfox.noray/noray.gd"
+PacketHandshake="*res://addons/netfox.noray/packet-handshake.gd"
+NetworkTime="*res://addons/netfox/network-time.gd"
+NetworkTimeSynchronizer="*res://addons/netfox/network-time-synchronizer.gd"
+NetworkRollback="*res://addons/netfox/rollback/network-rollback.gd"
+NetworkEvents="*res://addons/netfox/network-events.gd"
+NetworkPerformance="*res://addons/netfox/network-performance.gd"
 
 [debug]
 
@@ -23,6 +33,10 @@ gdscript/warnings/unsafe_method_access=1
 gdscript/warnings/unsafe_cast=1
 gdscript/warnings/unsafe_call_argument=1
 shader_language/warnings/treat_warnings_as_errors=true
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/netfox.noray/plugin.cfg", "res://addons/netfox/plugin.cfg")
 
 [rendering]
 

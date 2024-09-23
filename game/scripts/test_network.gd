@@ -20,14 +20,8 @@ func print_logs(msg: String, color: String = "") -> void:
 		logs.append_text(msg)
 
 func _create_server(port: int) -> void:
-	_peer = ENetMultiplayerPeer.new()
-	_peer.create_server(port)
-	multiplayer.multiplayer_peer = _peer
 
 func _create_client(address: String, port: int) -> void:
-	_peer = ENetMultiplayerPeer.new()
-	_peer.create_client(address, port)
-	multiplayer.multiplayer_peer = _peer
 
 # Appelée quand l'utilisateur a écrit quelque chose.
 func _message_from_user(msg: String) -> void:
