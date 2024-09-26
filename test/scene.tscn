@@ -27,3 +27,4 @@ offset_bottom = 98.0
 
 [connection signal="button_down" from="ServerButton" to="." method="on_choice" binds= [true]]
 [connection signal="button_down" from="ClientButton" to="." method="on_choice" binds= [false]]
+[connection signal="text_submitted" from="LineEdit" to="." method="send_message"]
