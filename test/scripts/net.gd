@@ -3,6 +3,7 @@ extends Node
 var readyButton: bool = false
 var readyPrompt: bool = false
 var instanceName: String = "-"
+var broadcastingActive: bool = false
 
 const host = "tomfol.io"
 const port = 8890
@@ -36,7 +37,14 @@ func on_choice(is_server: bool) -> void:
 		if error != OK:
 			printCool("ERROR 1-" + str(error))
 			return
+		if (MultiplayerPeer.ConnectionStatus.CONNECTION_CONNECTED
+			!= Network.peer.get_connection_status()
+		):
+				printCool("Error 4-" + str(Network.peer.get_connection_status()))
+				return
+		multiplayer.set_multiplayer_peer(Network.peer)
 		printCool("SERVER READY! IOD: " + Network.iod)
+		broadcastingActive = true
 	
 	else:
 		printCool("CLIENT MODE")
@@ -46,12 +54,21 @@ func on_choice(is_server: bool) -> void:
 		if error != OK:
 			printCool("Error 2-" + str(error))
 			return
-		printCool("CLIENT READY!")
+		multiplayer.set_multiplayer_peer(Network.peer)
+		multiplayer.connected_to_server.connect(func ():
+			printCool("CLIENT READY!")
+			broadcastingActive = true
+		)
+		multiplayer.connection_failed.connect(func ():
+			printCool("CLIENT FAILED :(")
+		)
 
 @rpc("any_peer", "call_remote", "reliable")
 func _rpc_message(txt: String) -> void:
 	printCool("Received message: " + txt)
 
 func send_message(txt: String) -> void:
+	if not broadcastingActive:
+		return
 	printCool("Broadcast message: " + txt)
 	_rpc_message.rpc(txt)

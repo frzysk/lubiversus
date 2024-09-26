@@ -1,3 +1,4 @@
-res://scripts/net.gd
 res://scene.tscn
 res://addons/netfox.noray/noray.gd
+res://scripts/net.gd
+res://addons/network.gd
