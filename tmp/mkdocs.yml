@@ -1,0 +1,34 @@
+site_name: netfox
+theme: readthedocs
+nav:
+  - 'index.md'
+  - 'upgrading.md'
+  - netfox:
+    - Tutorials:
+      - 'netfox/tutorials/responsive-player-movement.md'
+      - 'netfox/tutorials/rollback-caveats.md'
+    - Concepts:
+      - 'netfox/concepts/servers-clients-ownership.md'
+      - 'netfox/concepts/authoritative-servers.md'
+    - Guides:
+      - 'netfox/guides/logging.md'
+      - 'netfox/guides/network-time.md'
+      - 'netfox/guides/network-time-synchronizer.md'
+      - 'netfox/guides/network-events.md'
+      - 'netfox/guides/interpolators.md'
+      - 'netfox/guides/property-paths.md'
+      - 'netfox/guides/network-rollback.md'
+      - 'netfox/guides/network-performance.md'
+    - Nodes:
+      - 'netfox/nodes/tick-interpolator.md'
+      - 'netfox/nodes/rollback-synchronizer.md'
+      - 'netfox/nodes/state-synchronizer.md'
+  - netfox.noray:
+    - Guides:
+      - 'netfox.noray/guides/noray.md'
+      - 'netfox.noray/guides/packet-handshake.md'
+  - netfox.extras:
+    - Guides:
+      - 'netfox.extras/guides/base-net-input.md'
+      - 'netfox.extras/guides/network-weapon.md'
+
