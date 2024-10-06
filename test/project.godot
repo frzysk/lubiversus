@@ -20,6 +20,8 @@ config/icon="res://icon.svg"
 Noray="*res://addons/netfox.noray/noray.gd"
 Network="*res://addons/network.gd"
 PacketHandshake="*res://addons/netfox.noray/packet-handshake.gd"
+Async="*res://addons/async.gd"
+Online="*res://addons/noray-bootstrapper.gd"
 
 [editor_plugins]
 

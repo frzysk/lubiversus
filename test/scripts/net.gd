@@ -5,8 +5,7 @@ var readyPrompt: bool = false
 var instanceName: String = "-"
 var broadcastingActive: bool = false
 
-const host = "tomfol.io"
-const port = 8890
+const norayserver = "tomfol.io:8890"
 
 ##### UTILS #####
 func printCool(txt: String) -> void:
@@ -33,35 +32,35 @@ func on_choice(is_server: bool) -> void:
 	
 	if is_server:
 		printCool("SERVER MODE")
-		var error: Error = await Network.create_server(host, port)
+		Online.set_address(norayserver)
+		var error: Error = await Online.connect_to_noray()
 		if error != OK:
 			printCool("ERROR 1-" + str(error))
 			return
-		if (MultiplayerPeer.ConnectionStatus.CONNECTION_CONNECTED
-			!= Network.peer.get_connection_status()
-		):
-				printCool("Error 4-" + str(Network.peer.get_connection_status()))
-				return
-		multiplayer.set_multiplayer_peer(Network.peer)
-		printCool("SERVER READY! IOD: " + Network.iod)
+		error = await Online.host()
+		if error != OK:
+			printCool("ERROR 2-" + str(error))
+			return
+		printCool("Connected!")
+		printCool("server oid: " + Online.get_local_oid())
 		broadcastingActive = true
-	
+
 	else:
 		printCool("CLIENT MODE")
 		printCool("Send OID")
 		var oid: String = await waitPrompt()
-		var error: Error = await Network.create_client(host, port, oid)
+		Online.set_address(norayserver)
+		var error: Error = await Online.connect_to_noray()
 		if error != OK:
-			printCool("Error 2-" + str(error))
+			printCool("Error 3-" + str(error))
 			return
-		multiplayer.set_multiplayer_peer(Network.peer)
-		multiplayer.connected_to_server.connect(func ():
-			printCool("CLIENT READY!")
-			broadcastingActive = true
-		)
-		multiplayer.connection_failed.connect(func ():
-			printCool("CLIENT FAILED :(")
-		)
+		Online.set_host_oid(oid)
+		error = await Online.join()
+		if error != OK:
+			printCool("Error 4-" + str(error))
+			return
+		printCool("Connected!")
+		broadcastingActive = true
 
 @rpc("any_peer", "call_remote", "reliable")
 func _rpc_message(txt: String) -> void:
