@@ -32,8 +32,7 @@ func on_choice(is_server: bool) -> void:
 	
 	if is_server:
 		printCool("SERVER MODE")
-		Online.set_address(norayserver)
-		var error: Error = await Online.connect_to_noray()
+		var error: Error = await Online.connect_to_noray(norayserver)
 		if error != OK:
 			printCool("ERROR 1-" + str(error))
 			return
@@ -49,13 +48,11 @@ func on_choice(is_server: bool) -> void:
 		printCool("CLIENT MODE")
 		printCool("Send OID")
 		var oid: String = await waitPrompt()
-		Online.set_address(norayserver)
-		var error: Error = await Online.connect_to_noray()
+		var error: Error = await Online.connect_to_noray(norayserver)
 		if error != OK:
 			printCool("Error 3-" + str(error))
 			return
-		Online.set_host_oid(oid)
-		error = await Online.join()
+		error = await Online.join(oid)
 		if error != OK:
 			printCool("Error 4-" + str(error))
 			return

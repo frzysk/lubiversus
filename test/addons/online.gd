@@ -1,21 +1,9 @@
 extends Node
 
-#region VARIABLES
-
-var _address: String = ""
-var _host_oid: String = ""
-var _force_relay: bool = false
-
-## Set the address of the Noray server to use.
-func set_address(value: String):
-	_address = value
-
-## Set the OID of the host to connect to.
-func set_host_oid(value: String):
-	_host_oid = value
+#region GETTERS
 
 ## Set the force relay value. If true, doesn't even try NAT punchthrough.
-func set_force_relay(value: bool):
+func set_force_relay(value: bool) -> void:
 	_force_relay = value
 
 ## Get the OID of this host.
@@ -23,15 +11,17 @@ func get_local_oid() -> String:
 	return Noray.oid
 
 enum Role { NONE, HOST, CLIENT }
-var _role = Role.NONE
+
+## Get the role of this host.
+func get_role() -> Role:
+	return _role
 
 #endregion
 
 #region PUBLIC FUNCTIONS
 
 ## Connect to a Noray server.
-## Define the Noray server address with set_address() before calling this.
-func connect_to_noray() -> Error:
+func connect_to_noray(_address: String) -> Error:
 	# Connect to noray
 	var err = OK
 	if _address.contains(":"):
@@ -41,7 +31,6 @@ func connect_to_noray() -> Error:
 		err = await Noray.connect_to_host(address_host, address_port)
 	else:
 		err = await Noray.connect_to_host(_address)
-	
 	if err != OK:
 		print("Failed to connect to Noray: %s" % error_string(err))
 		return err
@@ -95,23 +84,30 @@ func host() -> Error:
 	get_tree().get_multiplayer().server_relay = true
 	
 	_role = Role.HOST
-	# NOTE: This is not needed when using NetworkEvents
-	# However, this script also runs in multiplayer-simple where NetworkEvents
-	# are assumed to be absent, hence starting NetworkTime manually
-	#NetworkTime.start()
 
 	return OK
 
 ## Connect to a game server.
-## Connect to a Noray server with connect_to_noray() and set the host OID with
-## with set_host_oid() before calling this.
-func join() -> Error:
-	_role = Role.CLIENT
+## Connect to a Noray server with connect_to_noray() before calling this.
+func join(_oid: String) -> Error:
+	var err: Error
 
+	_last_oid_that_wanted_to_be_joined = _oid
 	if _force_relay:
-		return await Noray.connect_relay(_host_oid)
+		err = await Noray.connect_relay(_oid)
 	else:
-		return await Noray.connect_nat(_host_oid)
+		err = await Noray.connect_nat(_oid)
+	if err == OK:
+		_role = Role.CLIENT
+	return err
+
+#endregion
+
+#region PRIVATE VARIABLES
+
+var _force_relay: bool = false
+var _role = Role.NONE
+var _last_oid_that_wanted_to_be_joined: String = "-" # explicit lol
 
 #endregion
 
@@ -127,7 +123,7 @@ func _handle_connect_nat(address: String, port: int) -> Error:
 	# If client failed to connect over NAT, try again over relay
 	if err != OK and _role != Role.HOST:
 		print("NAT connect failed with reason %s, retrying with relay" % error_string(err))
-		Noray.connect_relay(_host_oid)
+		Noray.connect_relay(_last_oid_that_wanted_to_be_joined)
 		err = OK
 
 	return err
