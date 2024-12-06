@@ -105,7 +105,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"walk_left",
-"speed": 5.0
+"speed": 8.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -116,7 +116,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"walk_right",
-"speed": 4.0
+"speed": 8.0
 }]
 
 [sub_resource type="GDScript" id="GDScript_vd1cr"]
@@ -141,7 +141,7 @@ script = SubResource("GDScript_celkc")
 position = Vector2(1, -23)
 scale = Vector2(0.5, 0.5)
 sprite_frames = SubResource("SpriteFrames_b1piu")
-animation = &"walk_right"
+animation = &"still_right"
 script = SubResource("GDScript_vd1cr")
 
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="."]

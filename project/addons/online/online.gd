@@ -169,7 +169,7 @@ func _handle_connect(address: String, port: int) -> Error:
 		get_tree().get_multiplayer().multiplayer_peer = peer
 		
 		# Wait for connection to succeed
-		await Async.condition(
+		Utils.AsyncCondition(
 			func(): return peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTING
 		)
 			
