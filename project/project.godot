@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="lubiversus"
-run/main_scene="res://example_scene.tscn"
+run/main_scene="res://scenes/menu_connect.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 config/icon="res://icon.svg"
 
@@ -19,12 +19,21 @@ config/icon="res://icon.svg"
 
 Noray="*res://addons/netfox.noray/noray.gd"
 PacketHandshake="*res://addons/netfox.noray/packet-handshake.gd"
-Utils="*res://addons/utils/utils.gd"
-Online="*res://addons/online/online.gd"
+OnlineConnection="*res://addons/online/online_connection.gd"
+SyncManager="*res://addons/godot-rollback-netcode/SyncManager.gd"
+Async="*res://addons/async.gd"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/netfox.internals/plugin.cfg", "res://addons/netfox.noray/plugin.cfg")
+enabled=PackedStringArray("res://addons/godot-rollback-netcode/plugin.cfg", "res://addons/netfox.internals/plugin.cfg", "res://addons/netfox.noray/plugin.cfg")
+
+[input]
+
+sync_debug={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":4194342,"physical_keycode":0,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
 
 [physics]
 

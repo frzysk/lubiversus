@@ -2,11 +2,6 @@
 
 [ext_resource type="PackedScene" uid="uid://xr0y4mjrt712" path="res://preset_scenes/character.tscn" id="1_j448t"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_ovas3"]
-size = Vector2(4.00585, 1)
-
-[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_65nxu"]
-
 [sub_resource type="GDScript" id="GDScript_injdc"]
 script/source = "extends Node2D
 
@@ -25,7 +20,19 @@ func _process(_delta: float) -> void:
 		CHARACTER.velocity = Vector2.ZERO
 "
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ovas3"]
+size = Vector2(4.00585, 1)
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_65nxu"]
+
 [node name="exampleScene" type="Node2D"]
+
+[node name="Charles" parent="." instance=ExtResource("1_j448t")]
+position = Vector2(485, 255)
+
+[node name="spawn_when_fall" type="Node2D" parent="Charles"]
+script = SubResource("GDScript_injdc")
+bottom_limit = 1500
 
 [node name="platform" type="Node2D" parent="."]
 
@@ -61,6 +68,18 @@ scale = Vector2(376.064, 29.5828)
 shape = SubResource("RectangleShape2D_ovas3")
 
 [node name="Sprite2D" type="Sprite2D" parent="platform/RigidBody2D3/CollisionShape2D"]
+scale = Vector2(4.0082, 1.03511)
+texture = SubResource("PlaceholderTexture2D_65nxu")
+
+[node name="RigidBody2D6" type="StaticBody2D" parent="platform"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="platform/RigidBody2D6"]
+position = Vector2(1502, -112)
+rotation = -0.779702
+scale = Vector2(218.141, 28.1943)
+shape = SubResource("RectangleShape2D_ovas3")
+
+[node name="Sprite2D" type="Sprite2D" parent="platform/RigidBody2D6/CollisionShape2D"]
 scale = Vector2(4.0082, 1.03511)
 texture = SubResource("PlaceholderTexture2D_65nxu")
 
@@ -131,10 +150,3 @@ shape = SubResource("RectangleShape2D_ovas3")
 [node name="Sprite2D" type="Sprite2D" parent="platform/RigidBody2D10/CollisionShape2D"]
 scale = Vector2(4.0082, 1.03511)
 texture = SubResource("PlaceholderTexture2D_65nxu")
-
-[node name="Charles" parent="." instance=ExtResource("1_j448t")]
-position = Vector2(485, 255)
-
-[node name="spawn_when_fall" type="Node2D" parent="Charles"]
-script = SubResource("GDScript_injdc")
-bottom_limit = 1000

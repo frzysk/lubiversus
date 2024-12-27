@@ -26,6 +26,7 @@ enum FACING_DIRECTION {
 var state := STATE.STILL
 
 const COYOTE_TIME_DELAY := 0.1
+const MAX_FALLING_SPEED := 1500.0
 var _coyote_time := 0.0
 var _double_jump := true
 
@@ -47,6 +48,8 @@ func _physics_process(delta: float) -> void:
 	## Add the gravity.
 	if not is_on_floor():
 		velocity += get_gravity() * delta
+		if velocity.y > MAX_FALLING_SPEED:
+			velocity.y = MAX_FALLING_SPEED
 
 	## Handle jump.
 	
@@ -62,12 +65,12 @@ func _physics_process(delta: float) -> void:
 	# double jump
 	if is_on_floor():
 		_double_jump = true
-	
+
 	# jump
 	if Input.is_action_just_pressed(\"ui_up\") and (can_jump or _use_double_jump()):
 		velocity.y = -jump_velocity
 		_coyote_time = 0
-	
+
 	# state
 	if velocity.x:
 		state = STATE.WALKING
@@ -129,8 +132,8 @@ func _process(_delta: float) -> void:
 		+ (\"right\" if character.facing_direction == character.FACING_DIRECTION.RIGHT else \"left\"))
 "
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_ua3mu"]
-size = Vector2(47, 100)
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_38sdo"]
+size = Vector2(49, 99)
 
 [node name="Charles" type="CharacterBody2D"]
 script = SubResource("GDScript_celkc")
@@ -144,6 +147,6 @@ sprite_frames = SubResource("SpriteFrames_b1piu")
 animation = &"still_right"
 script = SubResource("GDScript_vd1cr")
 
-[node name="CollisionShape2D2" type="CollisionShape2D" parent="."]
-position = Vector2(0.5, -14)
-shape = SubResource("RectangleShape2D_ua3mu")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(1.5, -12.5)
+shape = SubResource("RectangleShape2D_38sdo")

@@ -69,21 +69,21 @@ func connect_to_host(address: String, port: int = 8890) -> Error:
 		disconnect_from_host()
 
 	_logger.info("Trying to connect to noray at %s:%s", [address, port])
-	
+
 	address = IP.resolve_hostname(address, IP.TYPE_IPV4)
 	_logger.debug("Resolved noray host to %s", [address])
-	
+
 	var err = _peer.connect_to_host(address, port)
 	if err != Error.OK:
 		return err
-		
+
 	_peer.set_no_delay(true)
 	_protocol.reset()
 	
 	while _peer.get_status() < 2:
 		_peer.poll()
 		await get_tree().process_frame
-	
+
 	if _peer.get_status() == _peer.STATUS_CONNECTED:
 		_address = address
 		_logger.info("Connected to noray at %s:%s", [address, port])
