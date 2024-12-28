@@ -1,0 +1,216 @@
+[gd_scene load_steps=2 format=3 uid="uid://bu0op0d3set8x"]
+
+[sub_resource type="GDScript" id="GDScript_vjpcy"]
+script/source = "extends CenterContainer
+
+@onready var node_norayServer_textEdit : TextEdit = $\"Box/Serveur Noray/Input/TextEdit\"
+@onready var node_norayServer_button : Button = $\"Box/Serveur Noray/Button\"
+@onready var node_norayServer_status : Label = $\"Box/Serveur Noray/Status\"
+@onready var norayServer_address: String:
+	set(value):
+		if node_norayServer_textEdit.text != value:
+			node_norayServer_textEdit.text = value
+		norayServer_address = value
+
+@onready var node_creerLobby_button : Button = $\"Box/Créer Lobby/Button\"
+@onready var node_creerLobby_status : Label = $\"Box/Créer Lobby/Status\"
+
+@onready var node_joinLobby_textEdit : TextEdit = $\"Box/Rejoindre Lobby/Input/TextEdit\"
+@onready var node_joinLobby_button : Button = $\"Box/Rejoindre Lobby/Button\"
+@onready var node_joinLobby_status : Label = $\"Box/Rejoindre Lobby/Status\"
+@onready var joinLobby_address: String:
+	set(value):
+		if node_joinLobby_textEdit.text != value:
+			node_joinLobby_textEdit.text = value
+		joinLobby_address = value
+		
+@onready var node_start_button : Button = $\"Box/Start/Button\"
+
+func _write_status(el: Label, txt: String) -> void:
+	el.visible = true
+	el.text = txt
+
+func _ready() -> void:
+	norayServer_address = defaultNorayServerAddress
+	joinLobby_address = \"\"
+	
+	SyncManager.spectating = false
+	
+	SyncManager.sync_started.connect(_on_sync_started)
+
+	node_norayServer_textEdit.connect(\"text_changed\", func():
+		norayServer_address = node_norayServer_textEdit.text
+	)
+	
+	node_norayServer_button.connect(\"pressed\", func() -> void:
+		var address : String = norayServer_address
+
+		_write_status(node_norayServer_status, \"En cours...\")
+		var err: Error = await OnlineConnection.connect_to_noray(address)
+		if err != OK:
+			_write_status(node_norayServer_status,
+				\"Erreur lors de la connexion au serveur noray '\"
+				+ address + \"': \" + error_string(err))
+			return
+		_write_status(node_norayServer_status, \"Connecté à '\" + address + \"'.\")
+	)
+
+	node_creerLobby_button.connect(\"pressed\", func():
+		_write_status(node_creerLobby_status, \"En cours...\")
+		var err: Error = await OnlineConnection.host()
+		if err != OK:
+			_write_status(node_creerLobby_status,
+				\"Erreur lors de la création d'un lobby: \"
+				+ error_string(err))
+			return
+		_write_status(node_creerLobby_status, \"Lobby créé: \" + OnlineConnection.get_local_oid())
+	)
+	
+	node_joinLobby_textEdit.connect(\"text_changed\", func():
+		joinLobby_address = node_joinLobby_textEdit.text
+	)
+	
+	node_joinLobby_button.connect(\"pressed\", func():
+		var oid : String = node_joinLobby_textEdit.text
+
+		_write_status(node_joinLobby_status, \"En cours...\")
+		var err: Error = await OnlineConnection.join(oid)
+		if err != OK:
+			_write_status(node_joinLobby_status,
+				\"Erreur lors de la jointure du lobby '\" + oid + \"': \" # lol
+				+ error_string(err))
+			return
+		_write_status(node_joinLobby_status, \"Lobby jointu: \" + oid) # lol
+	)
+
+	node_start_button.connect(\"pressed\", func():
+		var i: int = 1
+		for peer in multiplayer.get_peers():
+			start_game.rpc_id(peer, i if i < 4 else -1)
+			i += 1
+		start_game(0)
+	)
+
+	multiplayer.peer_connected.connect(func(peer_id: int):
+		print(\"Peer \" + String.num(peer_id) + \" connected!\")
+	)
+
+@rpc(\"any_peer\", \"call_local\", \"reliable\")
+func start_game(n: int):
+	if n < 0 or n > 3:
+		push_error(\"Too many people, you can't enter the game.\")
+	Global.player_id = n
+	Global.players[n] = multiplayer.get_unique_id()
+	_add_peer.rpc(multiplayer.get_unique_id(), n)
+	if multiplayer.is_server():
+		await get_tree().create_timer(2.0).timeout
+		SyncManager.start()
+
+@rpc(\"any_peer\", \"call_remote\", \"reliable\")
+func _add_peer(peer_id: int, player_id: int) -> void:
+	SyncManager.add_peer(peer_id)
+	Global.players[player_id] = peer_id
+
+func _on_sync_started() -> void:
+	get_tree().change_scene_to_file(\"res://scenes/platform_example.tscn\")
+"
+
+[node name="MenuConnect" type="CenterContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+script = SubResource("GDScript_vjpcy")
+defaultNorayServerAddress = "tomfol.io:8890"
+
+[node name="Box" type="VBoxContainer" parent="."]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+
+[node name="Serveur Noray" type="VBoxContainer" parent="Box"]
+layout_mode = 2
+
+[node name="Input" type="BoxContainer" parent="Box/Serveur Noray"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Box/Serveur Noray/Input"]
+layout_mode = 2
+text = "Serveur Noray :"
+horizontal_alignment = 2
+
+[node name="TextEdit" type="TextEdit" parent="Box/Serveur Noray/Input"]
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Button" type="Button" parent="Box/Serveur Noray"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Se connecter au serveur Noray"
+
+[node name="Status" type="Label" parent="Box/Serveur Noray"]
+visible = false
+layout_mode = 2
+text = "-"
+horizontal_alignment = 1
+
+[node name="Separator1" type="HSeparator" parent="Box"]
+layout_mode = 2
+
+[node name="Créer Lobby" type="VBoxContainer" parent="Box"]
+layout_mode = 2
+
+[node name="Button" type="Button" parent="Box/Créer Lobby"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Créer un lobby"
+
+[node name="Status" type="Label" parent="Box/Créer Lobby"]
+visible = false
+layout_mode = 2
+text = "-"
+horizontal_alignment = 1
+
+[node name="Separator2" type="HSeparator" parent="Box"]
+layout_mode = 2
+
+[node name="Rejoindre Lobby" type="VBoxContainer" parent="Box"]
+layout_mode = 2
+
+[node name="Input" type="BoxContainer" parent="Box/Rejoindre Lobby"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Box/Rejoindre Lobby/Input"]
+layout_mode = 2
+text = "Addresse :"
+horizontal_alignment = 2
+
+[node name="TextEdit" type="TextEdit" parent="Box/Rejoindre Lobby/Input"]
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Button" type="Button" parent="Box/Rejoindre Lobby"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Rejoindre le lobby"
+
+[node name="Status" type="Label" parent="Box/Rejoindre Lobby"]
+visible = false
+layout_mode = 2
+text = "-"
+horizontal_alignment = 1
+
+[node name="Separator3" type="HSeparator" parent="Box"]
+layout_mode = 2
+
+[node name="Start" type="VBoxContainer" parent="Box"]
+layout_mode = 2
+
+[node name="Button" type="Button" parent="Box/Start"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Start"

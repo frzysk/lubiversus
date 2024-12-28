@@ -1,99 +1,69 @@
-[gd_scene load_steps=3 format=3 uid="uid://b6aksa3tabonm"]
+[gd_scene load_steps=3 format=3 uid="uid://c0agboogx5q6l"]
 
 [sub_resource type="GDScript" id="GDScript_vjpcy"]
-script/source = "extends CenterContainer
+script/source = "extends Control
 
-@export_group(\"Default values\")
-@export var defaultNorayServerAddress: String
+@onready var node_norayServer_textEdit: TextEdit = $\"Form/Serveur Noray/Input/TextEdit\"
+@onready var node_creerLobby_button: Button = $\"Form/Créer Lobby/Button\"
+@onready var node_joinLobby_textEdit: TextEdit = $\"Form/Rejoindre Lobby/Input/TextEdit\"
+@onready var node_joinLobby_button: Button = $\"Form/Rejoindre Lobby/Button\"
+@onready var node_loadingScreen: Control = $\"Loading\"
+@onready var node_loadingScreen_label: Control = $\"Loading/Label\"
+@onready var node_errorMessage: Label = $\"Error Message\"
 
-@onready var node_norayServer_textEdit : TextEdit = $\"Box/Serveur Noray/Input/TextEdit\"
-@onready var node_norayServer_button : Button = $\"Box/Serveur Noray/Button\"
-@onready var node_norayServer_status : Label = $\"Box/Serveur Noray/Status\"
-@onready var norayServer_address: String:
-	set(value):
-		if node_norayServer_textEdit.text != value:
-			node_norayServer_textEdit.text = value
-		norayServer_address = value
+func _connect_to_noray() -> Error:
+	var address : String = node_norayServer_textEdit.text
+	node_loadingScreen_label.text = \"Connexion au serveur Noray '\" + address + \"'...\"
 
-@onready var node_creerLobby_button : Button = $\"Box/Créer Lobby/Button\"
-@onready var node_creerLobby_status : Label = $\"Box/Créer Lobby/Status\"
+	var err: Error = await OnlineConnection.connect_to_noray(address)
+	if err != OK:
+		node_errorMessage.text = \"Erreur lors de la connexion au serveur noray '\" + address + \"': \" + error_string(err)
+		return err
 
-@onready var node_joinLobby_textEdit : TextEdit = $\"Box/Rejoindre Lobby/Input/TextEdit\"
-@onready var node_joinLobby_button : Button = $\"Box/Rejoindre Lobby/Button\"
-@onready var node_joinLobby_status : Label = $\"Box/Rejoindre Lobby/Status\"
-@onready var joinLobby_address: String:
-	set(value):
-		if node_joinLobby_textEdit.text != value:
-			node_joinLobby_textEdit.text = value
-		joinLobby_address = value
-
-func _write_status(el: Label, txt: String) -> void:
-	el.visible = true
-	el.text = txt
+	return OK
 
 func _ready() -> void:
-	norayServer_address = defaultNorayServerAddress
-	joinLobby_address = \"\"
-
-	node_norayServer_textEdit.connect(\"text_changed\", func():
-		norayServer_address = node_norayServer_textEdit.text
-	)
-	
-	node_norayServer_button.connect(\"pressed\", func() -> void:
-		var address : String = norayServer_address
-
-		_write_status(node_norayServer_status, \"En cours...\")
-		var err: Error = await OnlineConnection.connect_to_noray(address)
-		if err != OK:
-			_write_status(node_norayServer_status,
-				\"Erreur lors de la connexion au serveur noray '\"
-				+ address + \"': \" + error_string(err))
-			return
-		_write_status(node_norayServer_status, \"Connecté à '\" + address + \"'.\")
-	)
-
 	node_creerLobby_button.connect(\"pressed\", func():
-		_write_status(node_creerLobby_status, \"En cours...\")
-		var err: Error = await OnlineConnection.host()
-		if err != OK:
-			_write_status(node_creerLobby_status,
-				\"Erreur lors de la création d'un lobby: \"
-				+ error_string(err))
+		node_loadingScreen.visible = true
+		if (await _connect_to_noray()) != OK:
+			node_loadingScreen.visible = false
 			return
-		_write_status(node_creerLobby_status, \"Lobby créé: \" + OnlineConnection.get_local_oid())
-	)
-	
-	node_joinLobby_textEdit.connect(\"text_changed\", func():
-		joinLobby_address = node_joinLobby_textEdit.text
+		
+		node_loadingScreen_label.text = \"Création du lobby...\"
+		var err := await OnlineConnection.host()
+		if err != OK:
+			node_errorMessage.text = \"Erreur lors de la création d'un lobby: \" + error_string(err)
+			return
+
+		Lobby.clean()
+		Lobby.add_player(multiplayer.multiplayer_peer)
+		get_tree().change_scene_to_file(\"res://scenes/menu_lobby.tscn\")
 	)
 	
 	node_joinLobby_button.connect(\"pressed\", func():
-		var oid : String = node_joinLobby_textEdit.text
-
-		_write_status(node_joinLobby_status, \"En cours...\")
-		var err: Error = await OnlineConnection.join(oid)
-		if err != OK:
-			_write_status(node_joinLobby_status,
-				\"Erreur lors de la jointure du lobby '\" + oid + \"': \" # lol
-				+ error_string(err))
+		node_loadingScreen.visible = true
+		if (await _connect_to_noray()) != OK:
+			node_loadingScreen.visible = false
 			return
-		_write_status(node_joinLobby_status, \"Lobby jointu: \" + oid) # lol
+
+		var oid_to_join := node_joinLobby_textEdit.text
+		node_loadingScreen_label.text = \"Joignage du lobby '\" + oid_to_join + \"'...\" # lol
+		var err := await OnlineConnection.join(oid_to_join)
+		if err != OK:
+			node_errorMessage.text = \"Erreur lors de la jointure du lobby '\" + oid_to_join + \"': \" + error_string(err) # mdr
+			return
+
+		node_loadingScreen_label.text = \"Réception des informations du lobby '\" + oid_to_join + \"'...\"
+		await Lobby.ask_authority()
+		get_tree().change_scene_to_file(\"res://scenes/menu_lobby.tscn\")
 	)
 "
 
-[sub_resource type="GDScript" id="GDScript_pqpqs"]
-script/source = "extends Button
+[sub_resource type="LabelSettings" id="LabelSettings_jtd4r"]
+font_color = Color(0.91, 0.1183, 0.1183, 1)
 
-@rpc(\"any_peer\", \"call_remote\", \"reliable\")
-func _receive_spaghetti() -> void:
-	self.text += \" (thou received spaghetti)\"
-
-func _on_pressed() -> void:
-	_receive_spaghetti.rpc()
-	self.text += \" (thou sent spaghetti)\"
-"
-
-[node name="MenuConnect" type="CenterContainer"]
+[node name="MenuConnect" type="Control"]
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -102,90 +72,115 @@ grow_vertical = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 script = SubResource("GDScript_vjpcy")
-defaultNorayServerAddress = "tomfol.io:8890"
 
-[node name="Box" type="VBoxContainer" parent="."]
+[node name="Form" type="VBoxContainer" parent="."]
 custom_minimum_size = Vector2(300, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -80.0
+offset_right = 150.0
+offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Serveur Noray" type="VBoxContainer" parent="Form"]
 layout_mode = 2
 
-[node name="Serveur Noray" type="VBoxContainer" parent="Box"]
+[node name="Input" type="BoxContainer" parent="Form/Serveur Noray"]
 layout_mode = 2
 
-[node name="Input" type="BoxContainer" parent="Box/Serveur Noray"]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="Box/Serveur Noray/Input"]
+[node name="Label" type="Label" parent="Form/Serveur Noray/Input"]
 layout_mode = 2
 text = "Serveur Noray :"
 horizontal_alignment = 2
 
-[node name="TextEdit" type="TextEdit" parent="Box/Serveur Noray/Input"]
+[node name="TextEdit" type="TextEdit" parent="Form/Serveur Noray/Input"]
 custom_minimum_size = Vector2(0, 35)
 layout_mode = 2
 size_flags_horizontal = 3
+text = "tomfol.io:8890"
 
-[node name="Button" type="Button" parent="Box/Serveur Noray"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Se connecter au serveur Noray"
-
-[node name="Status" type="Label" parent="Box/Serveur Noray"]
-visible = false
-layout_mode = 2
-text = "-"
-horizontal_alignment = 1
-
-[node name="Separator1" type="HSeparator" parent="Box"]
+[node name="Separator1" type="HSeparator" parent="Form"]
+custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
 
-[node name="Créer Lobby" type="VBoxContainer" parent="Box"]
+[node name="Créer Lobby" type="VBoxContainer" parent="Form"]
 layout_mode = 2
 
-[node name="Button" type="Button" parent="Box/Créer Lobby"]
+[node name="Button" type="Button" parent="Form/Créer Lobby"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Créer un lobby"
 
-[node name="Status" type="Label" parent="Box/Créer Lobby"]
-visible = false
-layout_mode = 2
-text = "-"
-horizontal_alignment = 1
-
-[node name="Separator2" type="HSeparator" parent="Box"]
+[node name="Separator2" type="HSeparator" parent="Form"]
+custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
 
-[node name="Rejoindre Lobby" type="VBoxContainer" parent="Box"]
+[node name="Rejoindre Lobby" type="VBoxContainer" parent="Form"]
 layout_mode = 2
 
-[node name="Input" type="BoxContainer" parent="Box/Rejoindre Lobby"]
+[node name="Input" type="BoxContainer" parent="Form/Rejoindre Lobby"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Box/Rejoindre Lobby/Input"]
+[node name="Label" type="Label" parent="Form/Rejoindre Lobby/Input"]
 layout_mode = 2
 text = "Addresse :"
 horizontal_alignment = 2
 
-[node name="TextEdit" type="TextEdit" parent="Box/Rejoindre Lobby/Input"]
+[node name="TextEdit" type="TextEdit" parent="Form/Rejoindre Lobby/Input"]
 custom_minimum_size = Vector2(0, 35)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Button" type="Button" parent="Box/Rejoindre Lobby"]
+[node name="Button" type="Button" parent="Form/Rejoindre Lobby"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Rejoindre le lobby"
 
-[node name="Status" type="Label" parent="Box/Rejoindre Lobby"]
+[node name="Error Message" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+label_settings = SubResource("LabelSettings_jtd4r")
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Loading" type="Control" parent="."]
 visible = false
-layout_mode = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="ColorRect" parent="Loading"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.752941)
+
+[node name="Label" type="Label" parent="Loading"]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -11.5
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
 text = "-"
 horizontal_alignment = 1
-
-[node name="Button2" type="Button" parent="Box/Rejoindre Lobby"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Send spaghetti"
-script = SubResource("GDScript_pqpqs")
-
-[connection signal="pressed" from="Box/Rejoindre Lobby/Button2" to="Box/Rejoindre Lobby/Button2" method="_on_pressed"]
+autowrap_mode = 3

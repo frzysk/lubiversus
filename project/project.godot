@@ -22,6 +22,8 @@ PacketHandshake="*res://addons/netfox.noray/packet-handshake.gd"
 OnlineConnection="*res://addons/online/online_connection.gd"
 SyncManager="*res://addons/godot-rollback-netcode/SyncManager.gd"
 Async="*res://addons/async.gd"
+Global="*res://scripts/global.gd"
+Lobby="*res://scripts/lobby.gd"
 
 [editor_plugins]
 

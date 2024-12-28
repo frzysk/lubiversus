@@ -2,6 +2,11 @@
 
 [ext_resource type="PackedScene" uid="uid://xr0y4mjrt712" path="res://preset_scenes/character.tscn" id="1_j448t"]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ovas3"]
+size = Vector2(4.00585, 1)
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_65nxu"]
+
 [sub_resource type="GDScript" id="GDScript_injdc"]
 script/source = "extends Node2D
 
@@ -20,19 +25,7 @@ func _process(_delta: float) -> void:
 		CHARACTER.velocity = Vector2.ZERO
 "
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_ovas3"]
-size = Vector2(4.00585, 1)
-
-[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_65nxu"]
-
 [node name="exampleScene" type="Node2D"]
-
-[node name="Charles" parent="." instance=ExtResource("1_j448t")]
-position = Vector2(485, 255)
-
-[node name="spawn_when_fall" type="Node2D" parent="Charles"]
-script = SubResource("GDScript_injdc")
-bottom_limit = 1500
 
 [node name="platform" type="Node2D" parent="."]
 
@@ -150,3 +143,37 @@ shape = SubResource("RectangleShape2D_ovas3")
 [node name="Sprite2D" type="Sprite2D" parent="platform/RigidBody2D10/CollisionShape2D"]
 scale = Vector2(4.0082, 1.03511)
 texture = SubResource("PlaceholderTexture2D_65nxu")
+
+[node name="Charles1" parent="." instance=ExtResource("1_j448t")]
+position = Vector2(450, 285.663)
+facing_direction = 1
+player_num = 0
+
+[node name="spawn_when_fall" type="Node2D" parent="Charles1"]
+script = SubResource("GDScript_injdc")
+bottom_limit = 1500
+
+[node name="Charles2" parent="." instance=ExtResource("1_j448t")]
+position = Vector2(750, 285.664)
+player_num = 0
+
+[node name="spawn_when_fall" type="Node2D" parent="Charles2"]
+script = SubResource("GDScript_injdc")
+bottom_limit = 1500
+
+[node name="Charles3" parent="." instance=ExtResource("1_j448t")]
+position = Vector2(350, 557.136)
+facing_direction = 1
+player_num = 0
+
+[node name="spawn_when_fall" type="Node2D" parent="Charles3"]
+script = SubResource("GDScript_injdc")
+bottom_limit = 1500
+
+[node name="Charles4" parent="." instance=ExtResource("1_j448t")]
+position = Vector2(850, 557.142)
+player_num = 0
+
+[node name="spawn_when_fall" type="Node2D" parent="Charles4"]
+script = SubResource("GDScript_injdc")
+bottom_limit = 1500

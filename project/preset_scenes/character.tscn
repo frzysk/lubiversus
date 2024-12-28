@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://xr0y4mjrt712"]
+[gd_scene load_steps=8 format=3 uid="uid://xr0y4mjrt712"]
 
 [ext_resource type="Texture2D" uid="uid://c18fbqe5b737w" path="res://textures/sprites/charles_l1.png" id="1_8b5y5"]
 [ext_resource type="Texture2D" uid="uid://cdspqq4bbprbj" path="res://textures/sprites/charles_r1.png" id="2_wme5i"]
@@ -6,40 +6,59 @@
 [ext_resource type="Texture2D" uid="uid://cvla836fksmhm" path="res://textures/sprites/charles_r2.png" id="4_6wsk0"]
 
 [sub_resource type="GDScript" id="GDScript_celkc"]
-script/source = "extends CharacterBody2D
+script/source = "@tool
+extends CharacterBody2D
 
 @export var speed := 500.0
 @export var jump_velocity := 1500.0
 @export var allow_double_jump := true
-@export var facing_direction := FACING_DIRECTION.RIGHT
+@export var facing_direction := FacingDirection.RIGHT
+@export var player_num: int
 
-enum STATE {
+enum MovingState {
 	STILL,
 	WALKING,
 }
 
-enum FACING_DIRECTION {
+enum FacingDirection {
 	LEFT,
 	RIGHT,
 }
 
-var state := STATE.STILL
+var moving_state := MovingState.STILL
 
 const COYOTE_TIME_DELAY := 0.1
 const MAX_FALLING_SPEED := 1500.0
 var _coyote_time := 0.0
 var _double_jump := true
 
+func _ready() -> void:
+	self.set_multiplayer_authority(Global.players[player_num])
+
 func _use_double_jump() -> bool:
 	if allow_double_jump && _double_jump:
 		_double_jump = false
 		return true
 	return false
- 
-func _physics_process(delta: float) -> void:
+
+func _get_local_input() -> Dictionary:
+	return {
+		\"haxis\": Input.get_axis(\"ui_left\", \"ui_right\"),
+		\"jump\": Input.is_action_just_pressed(\"ui_up\"),
+	}
+
+func _network_process(input: Dictionary) -> void: # TODO make this deterministic
+	const delta := 1. / Global.FPS
+	
+	if not input:
+		input = { \"haxis\": 0., \"jump\": false }
+
+	if Engine.is_editor_hint():
+		move_and_slide()
+		return
 
 	## Get the input direction and handle the movement/deceleration.
-	var direction := Input.get_axis(\"ui_left\", \"ui_right\")
+	var direction: float = input[\"haxis\"]
 	if direction:
 		velocity.x = direction * speed
 	else:
@@ -67,18 +86,47 @@ func _physics_process(delta: float) -> void:
 		_double_jump = true
 
 	# jump
-	if Input.is_action_just_pressed(\"ui_up\") and (can_jump or _use_double_jump()):
+	if input[\"jump\"] and (can_jump or _use_double_jump()):
 		velocity.y = -jump_velocity
 		_coyote_time = 0
 
 	# state
 	if velocity.x:
-		state = STATE.WALKING
-		facing_direction = FACING_DIRECTION.RIGHT if velocity.x > 0 else FACING_DIRECTION.LEFT
+		moving_state = MovingState.WALKING
+		facing_direction = FacingDirection.RIGHT if velocity.x > 0 else FacingDirection.LEFT
 	else:
-		state = STATE.STILL
+		moving_state = MovingState.STILL
 
 	move_and_slide()
+
+func _save_state() -> Dictionary:
+	return {
+		\"velocity\": velocity,
+		\"coyote_time\": _coyote_time,
+		\"double_jump\": _double_jump,
+		\"moving_state\": moving_state,
+		\"facing_direction\": facing_direction,
+		\"position\": position,
+	}
+
+func _load_state(state: Dictionary) -> void:
+	velocity = state[\"velocity\"]
+	_coyote_time = state[\"coyote_time\"]
+	_double_jump = state[\"double_jump\"]
+	moving_state = state[\"moving_state\"]
+	facing_direction = state[\"facing_direction\"]
+	position = state[\"position\"]
+
+func _sync_image() -> void:
+	$characterAnimation.play(
+		(\"walk_\" if moving_state == MovingState.WALKING else \"still_\")
+		+ (\"left\" if facing_direction == FacingDirection.LEFT else \"right\"))
+
+func _enter_tree() -> void:
+	_sync_image()
+
+func _process(_delta: float) -> void:
+	_sync_image()
 "
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_b1piu"]
@@ -122,30 +170,23 @@ animations = [{
 "speed": 8.0
 }]
 
-[sub_resource type="GDScript" id="GDScript_vd1cr"]
-script/source = "extends AnimatedSprite2D
-
-func _process(_delta: float) -> void:
-	var character := get_node(\"..\")
-	play(
-		(\"walk_\" if character.state == character.STATE.WALKING else \"still_\")
-		+ (\"right\" if character.facing_direction == character.FACING_DIRECTION.RIGHT else \"left\"))
-"
-
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_38sdo"]
 size = Vector2(49, 99)
 
-[node name="Charles" type="CharacterBody2D"]
+[node name="Charles" type="CharacterBody2D" groups=["network_sync"]]
+position = Vector2(-75, 0)
 script = SubResource("GDScript_celkc")
+facing_direction = 0
+player_num = null
 
 [node name="Camera2D2" type="Camera2D" parent="."]
 
-[node name="characterAnimation2" type="AnimatedSprite2D" parent="."]
+[node name="characterAnimation" type="AnimatedSprite2D" parent="."]
 position = Vector2(1, -23)
 scale = Vector2(0.5, 0.5)
 sprite_frames = SubResource("SpriteFrames_b1piu")
-animation = &"still_right"
-script = SubResource("GDScript_vd1cr")
+animation = &"still_left"
+frame_progress = 0.257582
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(1.5, -12.5)
