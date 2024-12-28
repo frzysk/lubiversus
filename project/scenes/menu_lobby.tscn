@@ -1,0 +1,64 @@
+[gd_scene load_steps=3 format=3 uid="uid://b3v8awm2gfuo2"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_4hftd"]
+font_size = 32
+
+[sub_resource type="GDScript" id="GDScript_7py14"]
+script/source = "extends GridContainer
+
+func _sync_lobby_info() -> void:
+	print(\"############ sync lobby info\") # TODO debug
+	for child in get_children():
+		remove_child(child)
+	
+	var add_label = func(txt: String) -> void:
+		var label := Label.new()
+		label.text = txt
+		add_child(label)
+
+	add_label.call(\"n°\")
+	add_label.call(\"OID\")
+	add_label.call(\"Status\")
+	add_label.call(\"Peer ID\") # TODO debug
+	var i := 1
+	for player in Lobby.players:
+		add_label.call(str(i))
+		add_label.call(player.oid)
+		if player.state == Lobby.Player.State.ME:
+			add_label.call(\"C'est toi :)\")
+		elif player.state == Lobby.Player.State.CONNECTED:
+			add_label.call(\"Connecté\")
+		if player.state == Lobby.Player.State.CONNECTING:
+			add_label.call(\"Connexion...\")
+		add_label.call(str(player.peer) if player.peer != null else \"huh\")
+		i += 1
+
+func _ready() -> void:
+	Lobby.modified.connect(_sync_lobby_info)
+	_sync_lobby_info()
+"
+
+[node name="MenuLobby" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 2
+text = "Woa un lobby :0"
+label_settings = SubResource("LabelSettings_4hftd")
+horizontal_alignment = 1
+
+[node name="Container" type="Control" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="GridContainer" type="GridContainer" parent="Container"]
+layout_mode = 2
+offset_top = 4.0
+offset_right = 1152.0
+offset_bottom = 4.0
+columns = 4
+script = SubResource("GDScript_7py14")

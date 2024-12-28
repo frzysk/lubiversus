@@ -15,10 +15,14 @@ func _connect_to_noray() -> Error:
 	var address : String = node_norayServer_textEdit.text
 	node_loadingScreen_label.text = \"Connexion au serveur Noray '\" + address + \"'...\"
 
-	var err: Error = await OnlineConnection.connect_to_noray(address)
+	var err: Error = await OnlineConnection.connect_to_noray(address, func():
+		# TODO on disconnect from noray
+		print(\"DISCONNECTED FROM NORAY!\")
+	)
 	if err != OK:
 		node_errorMessage.text = \"Erreur lors de la connexion au serveur noray '\" + address + \"': \" + error_string(err)
 		return err
+	print(\"CONNECTED TO NORAY\") # TODO debug
 
 	return OK
 
@@ -34,9 +38,9 @@ func _ready() -> void:
 		if err != OK:
 			node_errorMessage.text = \"Erreur lors de la création d'un lobby: \" + error_string(err)
 			return
+		print(\"CONNECTED TO HOST\") # TODO debug
 
-		Lobby.clean()
-		Lobby.add_player(multiplayer.multiplayer_peer)
+		Lobby.create_lobby()
 		get_tree().change_scene_to_file(\"res://scenes/menu_lobby.tscn\")
 	)
 	
@@ -47,14 +51,14 @@ func _ready() -> void:
 			return
 
 		var oid_to_join := node_joinLobby_textEdit.text
-		node_loadingScreen_label.text = \"Joignage du lobby '\" + oid_to_join + \"'...\" # lol
+		node_loadingScreen_label.text = \"Connexion à '\" + oid_to_join + \"'...\"
 		var err := await OnlineConnection.join(oid_to_join)
 		if err != OK:
-			node_errorMessage.text = \"Erreur lors de la jointure du lobby '\" + oid_to_join + \"': \" + error_string(err) # mdr
+			node_errorMessage.text = \"Erreur lors de la connexion à '\" + oid_to_join + \"': \" + error_string(err) # mdr
 			return
 
-		node_loadingScreen_label.text = \"Réception des informations du lobby '\" + oid_to_join + \"'...\"
-		await Lobby.ask_authority()
+		node_loadingScreen_label.text = \"Rejoignage du lobby...\"
+		await Lobby.join_peer_lobby_and_wait()
 		get_tree().change_scene_to_file(\"res://scenes/menu_lobby.tscn\")
 	)
 "

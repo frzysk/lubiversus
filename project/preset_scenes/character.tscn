@@ -177,7 +177,6 @@ size = Vector2(49, 99)
 position = Vector2(-75, 0)
 script = SubResource("GDScript_celkc")
 facing_direction = 0
-player_num = null
 
 [node name="Camera2D2" type="Camera2D" parent="."]
 
@@ -186,7 +185,7 @@ position = Vector2(1, -23)
 scale = Vector2(0.5, 0.5)
 sprite_frames = SubResource("SpriteFrames_b1piu")
 animation = &"still_left"
-frame_progress = 0.257582
+frame_progress = 0.433342
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(1.5, -12.5)

@@ -147,7 +147,6 @@ texture = SubResource("PlaceholderTexture2D_65nxu")
 [node name="Charles1" parent="." instance=ExtResource("1_j448t")]
 position = Vector2(450, 285.663)
 facing_direction = 1
-player_num = 0
 
 [node name="spawn_when_fall" type="Node2D" parent="Charles1"]
 script = SubResource("GDScript_injdc")
@@ -155,7 +154,6 @@ bottom_limit = 1500
 
 [node name="Charles2" parent="." instance=ExtResource("1_j448t")]
 position = Vector2(750, 285.664)
-player_num = 0
 
 [node name="spawn_when_fall" type="Node2D" parent="Charles2"]
 script = SubResource("GDScript_injdc")
@@ -164,7 +162,6 @@ bottom_limit = 1500
 [node name="Charles3" parent="." instance=ExtResource("1_j448t")]
 position = Vector2(350, 557.136)
 facing_direction = 1
-player_num = 0
 
 [node name="spawn_when_fall" type="Node2D" parent="Charles3"]
 script = SubResource("GDScript_injdc")
@@ -172,7 +169,6 @@ bottom_limit = 1500
 
 [node name="Charles4" parent="." instance=ExtResource("1_j448t")]
 position = Vector2(850, 557.142)
-player_num = 0
 
 [node name="spawn_when_fall" type="Node2D" parent="Charles4"]
 script = SubResource("GDScript_injdc")

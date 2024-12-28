@@ -21,7 +21,7 @@ func get_role() -> Role:
 #region PUBLIC FUNCTIONS
 
 ## Connect to a Noray server.
-func connect_to_noray(_address: String) -> Error:
+func connect_to_noray(_address: String, _on_disconnected: Callable) -> Error:
 	# Connect to noray
 	var err = OK
 	if _address.contains(":"):
@@ -47,6 +47,12 @@ func connect_to_noray(_address: String) -> Error:
 	
 	# Our local port is a remote port to Noray, hence the weird naming
 	print("Registered local port: %d" % Noray.local_port)
+	
+	(func():
+		await Noray.on_disconnect_from_host
+		_on_disconnected.call()
+	).call()
+	
 	return OK
 
 ## Disconnect from the Noray server.
@@ -58,7 +64,7 @@ func disconnect_from_noray() -> void:
 func host() -> Error:
 	if Noray.local_port <= 0:
 		return ERR_UNCONFIGURED
-	
+
 	# Start host
 	var err = OK
 	var port = Noray.local_port
@@ -70,7 +76,7 @@ func host() -> Error:
 		print("Failed to listen on port %s: %s" % [port, error_string(err)])
 		return err
 
-	get_tree().get_multiplayer().multiplayer_peer = peer
+	multiplayer.multiplayer_peer = peer
 	print("Listening on port %s" % port)
 	
 	# Wait for server to start
@@ -81,15 +87,15 @@ func host() -> Error:
 		OS.alert("Failed to start server!")
 		return FAILED
 	
-	get_tree().get_multiplayer().server_relay = true
-	
+	multiplayer.server_relay = true
+
 	_role = Role.HOST
 
 	return OK
 
 ## Connect to a game server.
 ## Connect to a Noray server with connect_to_noray() before calling this.
-func join(_oid: String) -> Error:
+func join(_oid: String) -> Error: # TODO await connected and disconnected
 	var err: Error
 
 	_last_oid_that_wanted_to_be_joined = _oid
@@ -99,6 +105,9 @@ func join(_oid: String) -> Error:
 		err = await Noray.connect_nat(_oid)
 	if err == OK:
 		_role = Role.CLIENT
+	
+	await multiplayer.peer_connected # TODO add timeout
+	
 	return err
 
 #endregion
@@ -166,7 +175,7 @@ func _handle_connect(address: String, port: int) -> Error:
 			print("Failed to create client: %s" % error_string(err))
 			return err
 
-		get_tree().get_multiplayer().multiplayer_peer = peer
+		multiplayer.multiplayer_peer = peer
 		
 		# Wait for connection to succeed
 		await Async.condition(
@@ -175,7 +184,7 @@ func _handle_connect(address: String, port: int) -> Error:
 			
 		if peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
 			print("Failed to connect to %s:%s with status %s" % [address, port, peer.get_connection_status()])
-			get_tree().get_multiplayer().multiplayer_peer = null
+			multiplayer.multiplayer_peer = null
 			return ERR_CANT_CONNECT
 		
 		# NOTE: This is not needed when using NetworkEvents
@@ -185,7 +194,7 @@ func _handle_connect(address: String, port: int) -> Error:
 
 	if _role == Role.HOST:
 		# We should already have the connection configured, only thing to do is a handshake
-		var peer = get_tree().get_multiplayer().multiplayer_peer as ENetMultiplayerPeer
+		var peer = multiplayer.multiplayer_peer as ENetMultiplayerPeer
 		
 		err = await PacketHandshake.over_enet(peer.host, address, port)
 		
