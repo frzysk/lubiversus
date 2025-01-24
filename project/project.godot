@@ -24,10 +24,15 @@ SyncManager="*res://addons/godot-rollback-netcode/SyncManager.gd"
 Async="*res://addons/async.gd"
 Global="*res://scripts/global.gd"
 Lobby="*res://scripts/lobby.gd"
+game="*res://scripts/game.gd"
 
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/godot-rollback-netcode/plugin.cfg", "res://addons/netfox.internals/plugin.cfg", "res://addons/netfox.noray/plugin.cfg")
+
+[global_group]
+
+network_sync=""
 
 [input]
 

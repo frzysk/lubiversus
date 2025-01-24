@@ -32,9 +32,6 @@ const MAX_FALLING_SPEED := 1500.0
 var _coyote_time := 0.0
 var _double_jump := true
 
-func _ready() -> void:
-	self.set_multiplayer_authority(Global.players[player_num])
-
 func _use_double_jump() -> bool:
 	if allow_double_jump && _double_jump:
 		_double_jump = false
@@ -185,7 +182,7 @@ position = Vector2(1, -23)
 scale = Vector2(0.5, 0.5)
 sprite_frames = SubResource("SpriteFrames_b1piu")
 animation = &"still_left"
-frame_progress = 0.433342
+frame_progress = 0.452103
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(1.5, -12.5)

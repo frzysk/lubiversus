@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://b3v8awm2gfuo2"]
+[gd_scene load_steps=5 format=3 uid="uid://b3v8awm2gfuo2"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_4hftd"]
 font_size = 32
@@ -6,36 +6,51 @@ font_size = 32
 [sub_resource type="GDScript" id="GDScript_7py14"]
 script/source = "extends GridContainer
 
+func _add_label(txt: String) -> void:
+	var label := Label.new()
+	label.text = txt
+	add_child(label)
+
 func _sync_lobby_info() -> void:
 	print(\"############ sync lobby info\") # TODO debug
 	for child in get_children():
 		remove_child(child)
-	
-	var add_label = func(txt: String) -> void:
-		var label := Label.new()
-		label.text = txt
-		add_child(label)
 
-	add_label.call(\"n°\")
-	add_label.call(\"OID\")
-	add_label.call(\"Status\")
-	add_label.call(\"Peer ID\") # TODO debug
+	_add_label(\"n°\")
+	_add_label(\"OID\")
+	_add_label(\"Status\")
+	_add_label(\"Peer ID\") # TODO debug
 	var i := 1
 	for player in Lobby.players:
-		add_label.call(str(i))
-		add_label.call(player.oid)
+		_add_label(str(i))
+		_add_label(player.oid)
 		if player.state == Lobby.Player.State.ME:
-			add_label.call(\"C'est toi :)\")
+			_add_label(\"C'est toi :)\")
 		elif player.state == Lobby.Player.State.CONNECTED:
-			add_label.call(\"Connecté\")
+			_add_label(\"Connecté\")
 		if player.state == Lobby.Player.State.CONNECTING:
-			add_label.call(\"Connexion...\")
-		add_label.call(str(player.peer) if player.peer != null else \"huh\")
+			_add_label(\"Connexion...\")
+		_add_label(str(player.peer) if player.peer != null else \"\")
 		i += 1
 
 func _ready() -> void:
 	Lobby.modified.connect(_sync_lobby_info)
 	_sync_lobby_info()
+"
+
+[sub_resource type="GDScript" id="GDScript_csyl6"]
+script/source = "extends Button
+
+func _pressed() -> void:
+	pass # TODO quit button
+"
+
+[sub_resource type="GDScript" id="GDScript_m6j0j"]
+script/source = "extends Button
+
+func _pressed() -> void:
+	assert(Lobby.players.size() > 0)
+	await game.run(Lobby.players.slice(0, 4))
 "
 
 [node name="MenuLobby" type="VBoxContainer"]
@@ -62,3 +77,32 @@ offset_right = 1152.0
 offset_bottom = 4.0
 columns = 4
 script = SubResource("GDScript_7py14")
+
+[node name="Container2" type="Control" parent="."]
+custom_minimum_size = Vector2(0, 31)
+layout_mode = 2
+
+[node name="ButtonQuitter" type="Button" parent="Container2"]
+layout_mode = 1
+offset_right = 64.0
+offset_bottom = 31.0
+size_flags_horizontal = 0
+size_flags_vertical = 8
+text = "Quitter"
+script = SubResource("GDScript_csyl6")
+
+[node name="ButtonJouer" type="Button" parent="Container2"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -49.0
+offset_top = -31.0
+grow_horizontal = 0
+grow_vertical = 0
+size_flags_horizontal = 8
+size_flags_vertical = 8
+text = "Jouer"
+script = SubResource("GDScript_m6j0j")

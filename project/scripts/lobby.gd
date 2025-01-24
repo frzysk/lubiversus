@@ -37,6 +37,8 @@ class Player:
 		self.oid = oid_
 		self.state = state_
 		self.peer = peer_
+		if self.state == Player.State.ME:
+			self.peer = Lobby.multiplayer.get_unique_id()
 		if state_ == Player.State.CONNECTING:
 			(func():
 				self.peer = await Lobby._who_has_this_oid_and_wait(oid_)
@@ -57,8 +59,8 @@ class Player:
 		var peer_: Variant = null
 		if dict["oid"] == Noray.oid:
 			state_ = Player.State.ME
-		elif Lobby._get_player_from_oid(dict["oid"]) != null:
-			peer_ = Lobby._get_player_from_oid(dict["oid"]).peer_
+		elif Lobby.get_player_from_oid(dict["oid"]) != null:
+			peer_ = Lobby.get_player_from_oid(dict["oid"]).peer_
 			state_ = Player.State.CONNECTED if peer_ != null else Player.State.CONNECTING
 		else:
 			state_ = Player.State.CONNECTING
@@ -67,9 +69,12 @@ class Player:
 ## Liste des joueurs actuellement connectés au lobby.
 var players: Array[Player] = []
 
+## Fonction appelée quand on se déconnecte du lobby
+var _on_disconnect: Callable = func(): pass
+
 ## Retourne le Player correspondant à l'OID donné dans la liste des joueurs du lobby.
 ## null si aucun Player n'a cet OID.
-func _get_player_from_oid(oid: String) -> Variant:
+func get_player_from_oid(oid: String) -> Variant:
 	for player in players:
 		if player.oid == oid:
 			return player
@@ -92,21 +97,24 @@ func _deserialize(dict: Dictionary) -> void:
 	players = _players
 
 ## Se déconnecte du lobby. Ne fait rien si ce client n'est pas connecté à un lobby.
-func disconnect_from_lobby() -> void:
+func _disconnect_from_lobby() -> void:
 	_connected = false
 	players = []
+	_on_disconnect.call()
 
 ## Demande au peer de se connecter à son lobby.
 ## 'await' permet d'attendre de bien avoir été connecté au lobby.
 ## multiplayer.get_peers() doit avoir un et un seul peer.
-func join_peer_lobby_and_wait() -> void:
+func join_peer_lobby_and_wait(on_disconnect: Callable) -> void:
+	_on_disconnect = on_disconnect
 	var peers := multiplayer.get_peers()
 	assert(peers.size() == 1)
 	_join_lobby.rpc_id(peers[0], Noray.oid)
 	await _lobby_joined
 
 ## Crée un lobby avec seulement toi dedans :D
-func create_lobby() -> void:
+func create_lobby(on_disconnect: Callable) -> void:
+	_on_disconnect = on_disconnect
 	players = [Player.new(Noray.oid, Player.State.ME)]
 	_connected = true
 
@@ -137,7 +145,7 @@ func _join_lobby_accept(lobby_data: Dictionary) -> void:
 @rpc("any_peer", "call_remote", "reliable")
 func _add_player(oid: String) -> void:
 	print("///////// _add_player() called from " + str(multiplayer.get_remote_sender_id()))
-	if _get_player_from_oid(oid) != null:
+	if get_player_from_oid(oid) != null:
 		return
 	players.push_back(Player.new(oid, Player.State.CONNECTING))
 	modified.emit()

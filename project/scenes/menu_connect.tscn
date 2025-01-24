@@ -40,10 +40,10 @@ func _ready() -> void:
 			return
 		print(\"CONNECTED TO HOST\") # TODO debug
 
-		Lobby.create_lobby()
+		Lobby.create_lobby(func(): get_tree().change_scene_to_file(\"res://scenes/menu_connect.tscn\"))
 		get_tree().change_scene_to_file(\"res://scenes/menu_lobby.tscn\")
 	)
-	
+
 	node_joinLobby_button.connect(\"pressed\", func():
 		node_loadingScreen.visible = true
 		if (await _connect_to_noray()) != OK:
@@ -54,11 +54,11 @@ func _ready() -> void:
 		node_loadingScreen_label.text = \"Connexion à '\" + oid_to_join + \"'...\"
 		var err := await OnlineConnection.join(oid_to_join)
 		if err != OK:
-			node_errorMessage.text = \"Erreur lors de la connexion à '\" + oid_to_join + \"': \" + error_string(err) # mdr
+			node_errorMessage.text = \"Erreur lors de la connexion à '\" + oid_to_join + \"': \" + error_string(err)
 			return
 
 		node_loadingScreen_label.text = \"Rejoignage du lobby...\"
-		await Lobby.join_peer_lobby_and_wait()
+		await Lobby.join_peer_lobby_and_wait(func(): get_tree().change_scene_to_file(\"res://scenes/menu_connect.tscn\"))
 		get_tree().change_scene_to_file(\"res://scenes/menu_lobby.tscn\")
 	)
 "

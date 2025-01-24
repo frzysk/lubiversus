@@ -29,3 +29,7 @@ video 2:
 	-	`.set_network_master(peer_id)`
 
 	constant fps?
+
+	
+	steps:
+		- 
