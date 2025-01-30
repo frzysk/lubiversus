@@ -19,7 +19,7 @@ config/icon="res://icon.svg"
 
 Noray="*res://addons/netfox.noray/noray.gd"
 PacketHandshake="*res://addons/netfox.noray/packet-handshake.gd"
-OnlineConnection="*res://addons/online/online_connection.gd"
+OnlineConnection="*res://addons/online/online_connection2.gd"
 SyncManager="*res://addons/godot-rollback-netcode/SyncManager.gd"
 Async="*res://addons/async.gd"
 Global="*res://scripts/global.gd"

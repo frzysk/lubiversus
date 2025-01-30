@@ -168,37 +168,3 @@ func _process(_delta):
 		return
 	
 	_protocol.ingest(_peer.get_utf8_string(available))
-
-func _put_command(command: String, data = null) -> Error:
-	if not is_connected_to_host():
-		return ERR_CONNECTION_ERROR
-		
-	if data != null:
-		_peer.put_data(("%s %s\n" % [command, data]).to_utf8_buffer())
-	else:
-		_peer.put_data((command + "\n").to_utf8_buffer())
-
-	return OK
-
-func _handle_commands(command: String, data: String):
-	if command == "set-oid":
-		_oid = data
-		on_oid.emit(oid)
-		_logger.debug("Saved OID: %s", [oid])
-	elif command == "set-pid":
-		_pid = data
-		on_pid.emit(pid)
-		_logger.debug("Saved PID: %s", [pid])
-	elif command == "connect":
-		var parts = data.split(":")
-		var host = parts[0]
-		var port = parts[1].to_int()
-		_logger.debug("Received connect command to %s:%s", [host, port])
-		on_connect_nat.emit(host, port)
-	elif command == "connect-relay":
-		var host = _address
-		var port = data.to_int()
-		_logger.debug("Received connect relay command to %s:%s", [host, port])
-		on_connect_relay.emit(host, port)
-	else:
-		_logger.trace("Received command %s %s", [command, data])
