@@ -21,16 +21,16 @@ func get_role() -> Role:
 #region PUBLIC FUNCTIONS
 
 ## Connect to a Noray server.
-func connect_to_noray(_address: String, _on_disconnected: Callable) -> Error:
+func connect_to_noray_server(address: String, on_disconnected: Callable) -> Error:
 	# Connect to noray
 	var err = OK
-	if _address.contains(":"):
-		var parts = _address.split(":")
+	if address.contains(":"):
+		var parts = address.split(":")
 		var address_host = parts[0]
 		var address_port = (parts[1] as String).to_int()
 		err = await Noray.connect_to_host(address_host, address_port)
 	else:
-		err = await Noray.connect_to_host(_address)
+		err = await Noray.connect_to_host(address)
 	if err != OK:
 		print("Failed to connect to Noray: %s" % error_string(err))
 		return err
@@ -50,7 +50,7 @@ func connect_to_noray(_address: String, _on_disconnected: Callable) -> Error:
 	
 	(func():
 		await Noray.on_disconnect_from_host
-		_on_disconnected.call()
+		on_disconnected.call()
 	).call()
 	
 	return OK

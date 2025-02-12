@@ -159,11 +159,12 @@ func connect_relay(host_oid: String) -> Error:
 	return _put_command("connect-relay", host_oid)
 
 func _process(_delta):
-	if not is_connected_to_host():
-		return
-
 	_peer.poll()
-	var available = _peer.get_available_bytes()
+	if not is_connected_to_host():
+		if was_connected_last_frame:
+			... TODO
+		return
+	var available = _peer.get_available_bytes() # TODO FIXME can throw an error "Condition "!is_open()" is true. Returning: -1" after a while
 	if available <= 0:
 		return
 	

@@ -11,11 +11,11 @@ script/source = "extends Control
 @onready var node_loadingScreen_label: Control = $\"Loading/Label\"
 @onready var node_errorMessage: Label = $\"Error Message\"
 
-func _connect_to_noray() -> Error:
+func _connect_to_noray_server() -> Error:
 	var address : String = node_norayServer_textEdit.text
 	node_loadingScreen_label.text = \"Connexion au serveur Noray '\" + address + \"'...\"
 
-	var err: Error = await OnlineConnection.connect_to_noray(address, func():
+	var err: Error = await OnlineConnection.connect_to_noray_server(address, func():
 		# TODO on disconnect from noray
 		print(\"DISCONNECTED FROM NORAY!\")
 	)
@@ -29,7 +29,7 @@ func _connect_to_noray() -> Error:
 func _ready() -> void:
 	node_creerLobby_button.connect(\"pressed\", func():
 		node_loadingScreen.visible = true
-		if (await _connect_to_noray()) != OK:
+		if (await _connect_to_noray_server()) != OK:
 			node_loadingScreen.visible = false
 			return
 		
@@ -46,7 +46,7 @@ func _ready() -> void:
 
 	node_joinLobby_button.connect(\"pressed\", func():
 		node_loadingScreen.visible = true
-		if (await _connect_to_noray()) != OK:
+		if (await _connect_to_noray_server()) != OK:
 			node_loadingScreen.visible = false
 			return
 
