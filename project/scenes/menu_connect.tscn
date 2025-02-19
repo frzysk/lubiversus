@@ -16,8 +16,7 @@ func _connect_to_noray_server() -> Error:
 	node_loadingScreen_label.text = \"Connexion au serveur Noray '\" + address + \"'...\"
 
 	var err: Error = await OnlineConnection.connect_to_noray_server(address, func():
-		# TODO on disconnect from noray
-		print(\"DISCONNECTED FROM NORAY!\")
+		get_tree().change_scene_to_file(\"res://scenes/menu_connect.tscn\")
 	)
 	if err != OK:
 		node_errorMessage.text = \"Erreur lors de la connexion au serveur noray '\" + address + \"': \" + error_string(err)
@@ -40,7 +39,7 @@ func _ready() -> void:
 			return
 		print(\"CONNECTED TO HOST\") # TODO debug
 
-		Lobby.create_lobby(func(): get_tree().change_scene_to_file(\"res://scenes/menu_connect.tscn\"))
+		Lobby.create_lobby(func(): Noray.disconnect_from_host())
 		get_tree().change_scene_to_file(\"res://scenes/menu_lobby.tscn\")
 	)
 
@@ -58,7 +57,7 @@ func _ready() -> void:
 			return
 
 		node_loadingScreen_label.text = \"Rejoignage du lobby...\"
-		await Lobby.join_peer_lobby_and_wait(func(): get_tree().change_scene_to_file(\"res://scenes/menu_connect.tscn\"))
+		await Lobby.join_peer_lobby_and_wait(func(): Noray.disconnect_from_host())
 		get_tree().change_scene_to_file(\"res://scenes/menu_lobby.tscn\")
 	)
 "

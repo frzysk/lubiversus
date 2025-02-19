@@ -48,10 +48,10 @@ func connect_to_noray_server(address: String, on_disconnected: Callable) -> Erro
 	# Our local port is a remote port to Noray, hence the weird naming
 	print("Registered local port: %d" % Noray.local_port)
 	
-	(func():
+	(func(on_disconnected: Callable):
 		await Noray.on_disconnect_from_host
 		on_disconnected.call()
-	).call()
+	).call(on_disconnected)
 	
 	return OK
 

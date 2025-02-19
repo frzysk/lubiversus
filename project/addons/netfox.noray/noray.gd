@@ -9,6 +9,7 @@ var _address: String = ""
 var _oid: String = ""
 var _pid: String = ""
 var _local_port: int = -1
+var _was_connected_last_frame: bool = false
 
 static var _logger: _NetfoxLogger = _NetfoxLogger.for_noray("Noray")
 
@@ -102,8 +103,6 @@ func is_connected_to_host() -> bool:
 ##
 ## Does nothing if already disconnected.
 func disconnect_from_host():
-	if is_connected_to_host():
-		on_disconnect_from_host.emit()
 	_peer.disconnect_from_host()
 
 ## Register as host.
@@ -161,9 +160,12 @@ func connect_relay(host_oid: String) -> Error:
 func _process(_delta):
 	_peer.poll()
 	if not is_connected_to_host():
-		if was_connected_last_frame:
-			... TODO
+		if _was_connected_last_frame:
+			on_disconnect_from_host.emit()
+		_was_connected_last_frame = false
 		return
+	_was_connected_last_frame = true
+
 	var available = _peer.get_available_bytes() # TODO FIXME can throw an error "Condition "!is_open()" is true. Returning: -1" after a while
 	if available <= 0:
 		return

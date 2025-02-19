@@ -42,6 +42,9 @@ func _ready() -> void:
 script/source = "extends Button
 
 func _pressed() -> void:
+	print(\"ye\")
+	print(Noray._peer.put_data(\"PING\".to_ascii_buffer()))
+	print(\"ya\")
 	pass # TODO quit button
 "
 
